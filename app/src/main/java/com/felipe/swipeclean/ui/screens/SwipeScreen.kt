@@ -189,7 +189,7 @@ fun SwipeScreen(
                         )
                     },
             ) {
-                AsyncImage(photo.uri, photo.name, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                AsyncImage(photo.uri, photo.name, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
                 // veil para legibilidade da legenda
                 Box(Modifier.fillMaxSize().background(
                     Brush.verticalGradient(0.62f to Color.Transparent, 1f to Color.Black.copy(alpha = 0.55f))
