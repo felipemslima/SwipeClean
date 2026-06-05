@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.felipe.swipeclean.ui.SwipeViewModel
 import com.felipe.swipeclean.ui.screens.AlbumsScreen
 import com.felipe.swipeclean.ui.screens.DoneScreen
+import com.felipe.swipeclean.ui.screens.GPhotosScreen
 import com.felipe.swipeclean.ui.screens.ReviewScreen
 import com.felipe.swipeclean.ui.screens.SwipeScreen
 import com.felipe.swipeclean.ui.screens.WelcomeScreen
@@ -38,7 +39,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Screen { Albums, Swipe, Review, Done }
+private enum class Screen { Albums, Swipe, Review, Done, GPhotos }
 
 private fun readPermission(): String =
     if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES
@@ -93,11 +94,16 @@ private fun App(vm: SwipeViewModel = viewModel()) {
             onDeleted = { freed, count ->
                 freedBytes = freed; deletedCount = count; screen = Screen.Done
             },
+            onGooglePhotos = { screen = Screen.GPhotos },
         )
         Screen.Done -> DoneScreen(
             freedBytes = freedBytes,
             count = deletedCount,
             onBack = { screen = Screen.Albums },
+        )
+        Screen.GPhotos -> GPhotosScreen(
+            vm = vm,
+            onBack = { screen = Screen.Review },
         )
     }
 }

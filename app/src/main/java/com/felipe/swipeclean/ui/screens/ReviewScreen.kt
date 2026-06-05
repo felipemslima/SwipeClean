@@ -62,6 +62,7 @@ fun ReviewScreen(
     vm: SwipeViewModel,
     onBack: () -> Unit,
     onDeleted: (freedBytes: Long, count: Int) -> Unit,
+    onGooglePhotos: () -> Unit = {},
 ) {
     val sc = LocalSc.current
     val context = LocalContext.current
@@ -166,6 +167,12 @@ fun ReviewScreen(
                 color = sc.faint, fontSize = 11.5.sp,
                 modifier = Modifier.fillMaxWidth().padding(top = 9.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Spacer(Modifier.height(10.dp))
+            com.felipe.swipeclean.ui.components.ScGhostButton(
+                text = "Apagar do Google Fotos (beta)",
+                onClick = onGooglePhotos,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

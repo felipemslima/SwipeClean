@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SwipeClean</string>
+    <string name="gphotos_service_desc">Automatiza apagar fotos no app do Google Fotos após você revisar no SwipeClean. Só age quando você inicia a limpeza; só observa o Google Fotos. Experimental, uso pessoal.</string>
 </resources>
