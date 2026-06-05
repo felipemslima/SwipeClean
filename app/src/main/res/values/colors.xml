@@ -1,0 +1,4 @@
+<resources>
+    <!-- Mesmo fundo do tema "Sereno+" (ScBg) — usado na janela/splash. -->
+    <color name="sc_bg">#14141F</color>
+</resources>

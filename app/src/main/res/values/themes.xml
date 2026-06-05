@@ -1,4 +1,8 @@
 <resources>
-    <!-- Tema base do sistema; a UI é desenhada pelo Compose (Material 3). -->
-    <style name="Theme.SwipeClean" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- UI é dark forçado no Compose; janela base dark p/ não dar flash branco. -->
+    <style name="Theme.SwipeClean" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/sc_bg</item>
+        <item name="android:statusBarColor">@color/sc_bg</item>
+        <item name="android:navigationBarColor">@color/sc_bg</item>
+    </style>
 </resources>
