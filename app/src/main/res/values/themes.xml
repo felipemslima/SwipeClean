@@ -1,0 +1,4 @@
+<resources>
+    <!-- Tema base do sistema; a UI é desenhada pelo Compose (Material 3). -->
+    <style name="Theme.SwipeClean" parent="android:Theme.DeviceDefault.DayNight.NoActionBar" />
+</resources>
