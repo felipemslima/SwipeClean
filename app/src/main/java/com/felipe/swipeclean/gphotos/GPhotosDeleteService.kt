@@ -44,7 +44,7 @@ class GPhotosDeleteService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        GPhotosQueue.setLog("Serviço de acessibilidade conectado.")
+        GPhotosQueue.note("Serviço de acessibilidade conectado.")
     }
 
     override fun onInterrupt() {}
@@ -73,7 +73,7 @@ class GPhotosDeleteService : AccessibilityService() {
                 if (del != null) {
                     log("apagar -> clicando")
                     clickNode(del)
-                    GPhotosQueue.setPhase(GPhotosQueue.Phase.ProcurandoConfirmar)
+                    GPhotosQueue.changePhase(GPhotosQueue.Phase.ProcurandoConfirmar)
                     retries = 0
                     handler.postDelayed(step, STEP_MS)
                     return
@@ -173,6 +173,6 @@ class GPhotosDeleteService : AccessibilityService() {
 
     private fun log(msg: String) {
         android.util.Log.d("GPhotosDelete", msg)
-        GPhotosQueue.setLog(msg)
+        GPhotosQueue.note(msg)
     }
 }

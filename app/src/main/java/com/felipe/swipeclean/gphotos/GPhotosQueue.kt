@@ -50,8 +50,8 @@ object GPhotosQueue {
         if (active && phase == Phase.AbrindoFoto) phase = Phase.ProcurandoApagar
     }
 
-    fun setPhase(p: Phase) { phase = p }
-    fun setLog(msg: String) { log = msg }
+    fun changePhase(p: Phase) { phase = p }
+    fun note(msg: String) { log = msg }
 
     /** Avança para a próxima foto; retorna a próxima Uri ou null se acabou. */
     fun advance(): Uri? {
