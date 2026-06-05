@@ -1,7 +1,10 @@
 package com.felipe.swipeclean.gphotos
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.GestureDescription
 import android.content.Intent
+import android.graphics.Path
+import android.graphics.Rect
 import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
@@ -86,6 +89,7 @@ class GPhotosDeleteService : AccessibilityService() {
                     handler.postDelayed(step, STEP_MS)
                     return
                 }
+                if (retries == 2) dumpClickables(root)   // ajuda a descobrir os textos reais
                 scheduleRetry()
             }
 
@@ -98,6 +102,7 @@ class GPhotosDeleteService : AccessibilityService() {
                     handler.postDelayed({ goNext() }, STEP_MS)
                     return
                 }
+                if (retries == 2) dumpClickables(root)
                 scheduleRetry()
             }
 
@@ -144,9 +149,10 @@ class GPhotosDeleteService : AccessibilityService() {
         if (node == null) return null
         val text = (node.text?.toString() ?: "").lowercase(Locale.ROOT)
         val desc = (node.contentDescription?.toString() ?: "").lowercase(Locale.ROOT)
-        if (text.isNotBlank() || desc.isNotBlank()) {
+        val vid = (node.viewIdResourceName ?: "").lowercase(Locale.ROOT)
+        if (text.isNotBlank() || desc.isNotBlank() || vid.isNotBlank()) {
             for (w in words) {
-                if (text.contains(w) || desc.contains(w)) return node
+                if (text.contains(w) || desc.contains(w) || vid.contains(w)) return node
             }
         }
         for (i in 0 until node.childCount) {
@@ -154,6 +160,23 @@ class GPhotosDeleteService : AccessibilityService() {
             if (found != null) return found
         }
         return null
+    }
+
+    /** Loga todos os nós clicáveis (texto/desc/id) — pra descobrir os rótulos reais. */
+    private fun dumpClickables(root: AccessibilityNodeInfo) {
+        android.util.Log.d("GPhotosDelete", "==== nós clicáveis na tela ====")
+        fun walk(n: AccessibilityNodeInfo?) {
+            if (n == null) return
+            if (n.isClickable) {
+                android.util.Log.d(
+                    "GPhotosDelete",
+                    "clk text='${n.text}' desc='${n.contentDescription}' id='${n.viewIdResourceName}'",
+                )
+            }
+            for (i in 0 until n.childCount) walk(n.getChild(i))
+        }
+        walk(root)
+        android.util.Log.d("GPhotosDelete", "================================")
     }
 
     private fun nearestClickable(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
@@ -168,7 +191,19 @@ class GPhotosDeleteService : AccessibilityService() {
     }
 
     private fun clickNode(node: AccessibilityNodeInfo) {
-        node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        val ok = node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        if (!ok) tapNode(node)   // fallback: toque por gesto no centro do nó
+    }
+
+    /** Toca no centro do nó via gesto — funciona quando ACTION_CLICK é ignorado. */
+    private fun tapNode(node: AccessibilityNodeInfo) {
+        val r = Rect()
+        node.getBoundsInScreen(r)
+        if (r.width() <= 0 || r.height() <= 0) return
+        val path = Path().apply { moveTo(r.exactCenterX(), r.exactCenterY()) }
+        val stroke = GestureDescription.StrokeDescription(path, 0, 60)
+        dispatchGesture(GestureDescription.Builder().addStroke(stroke).build(), null, null)
+        log("tap por gesto em (${r.centerX()}, ${r.centerY()})")
     }
 
     private fun log(msg: String) {
