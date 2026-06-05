@@ -139,25 +139,49 @@ class GPhotosDeleteService : AccessibilityService() {
 
     // ── busca na árvore de acessibilidade ─────────────────────────────────
 
-    /** Acha um nó clicável cujo texto/descrição contém alguma das palavras. */
+    /**
+     * Acha um nó CLICÁVEL cujo texto/descrição/id casa com alguma palavra.
+     * Coleta todos os matches e retorna o 1º que resolve para um nó realmente
+     * clicável — assim ignora títulos de diálogo (ex. "Mover para a lixeira?")
+     * que casam mas não são botões.
+     */
     private fun findClickable(root: AccessibilityNodeInfo, words: List<String>): AccessibilityNodeInfo? {
-        val match = findMatch(root, words) ?: return null
-        return nearestClickable(match)
+        val matches = ArrayList<AccessibilityNodeInfo>()
+        collectMatches(root, words, matches)
+        for (m in matches) {
+            val c = ascendToClickable(m)
+            if (c != null) return c
+        }
+        return null
     }
 
-    private fun findMatch(node: AccessibilityNodeInfo?, words: List<String>): AccessibilityNodeInfo? {
-        if (node == null) return null
+    private fun collectMatches(
+        node: AccessibilityNodeInfo?,
+        words: List<String>,
+        out: MutableList<AccessibilityNodeInfo>,
+    ) {
+        if (node == null) return
         val text = (node.text?.toString() ?: "").lowercase(Locale.ROOT)
         val desc = (node.contentDescription?.toString() ?: "").lowercase(Locale.ROOT)
         val vid = (node.viewIdResourceName ?: "").lowercase(Locale.ROOT)
         if (text.isNotBlank() || desc.isNotBlank() || vid.isNotBlank()) {
             for (w in words) {
-                if (text.contains(w) || desc.contains(w) || vid.contains(w)) return node
+                if (text.contains(w) || desc.contains(w) || vid.contains(w)) {
+                    out.add(node); break
+                }
             }
         }
-        for (i in 0 until node.childCount) {
-            val found = findMatch(node.getChild(i), words)
-            if (found != null) return found
+        for (i in 0 until node.childCount) collectMatches(node.getChild(i), words, out)
+    }
+
+    /** Sobe do nó casado até achar um ancestral clicável; null se não houver. */
+    private fun ascendToClickable(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        var n: AccessibilityNodeInfo? = node
+        var hops = 0
+        while (n != null && hops < 6) {
+            if (n.isClickable) return n
+            n = n.parent
+            hops += 1
         }
         return null
     }
@@ -177,17 +201,6 @@ class GPhotosDeleteService : AccessibilityService() {
         }
         walk(root)
         android.util.Log.d("GPhotosDelete", "================================")
-    }
-
-    private fun nearestClickable(node: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-        var n: AccessibilityNodeInfo? = node
-        var hops = 0
-        while (n != null && hops < 6) {
-            if (n.isClickable) return n
-            n = n.parent
-            hops += 1
-        }
-        return node // tenta no próprio nó mesmo que não marcado clicável
     }
 
     private fun clickNode(node: AccessibilityNodeInfo) {

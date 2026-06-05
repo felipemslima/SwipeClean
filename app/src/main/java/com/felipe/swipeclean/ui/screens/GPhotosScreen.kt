@@ -64,6 +64,12 @@ fun GPhotosScreen(
     val context = LocalContext.current
     val uris = remember { vm.pendingDelete.map { it.uri } }
 
+    // Entrada nova na tela: se não há automação rodando, zera o estado anterior
+    // (senão fica preso em "Concluído" do lote passado).
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        if (!GPhotosQueue.active) GPhotosQueue.reset()
+    }
+
     val gphotosInstalled = remember { isGooglePhotosInstalled(context) }
 
     // Recheca se o serviço está habilitado toda vez que a tela volta ao primeiro plano.

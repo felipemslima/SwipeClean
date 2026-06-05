@@ -45,6 +45,15 @@ object GPhotosQueue {
         log = "Parado pelo usuário."
     }
 
+    /** Volta ao estado inicial — chamado ao (re)abrir a tela para um novo lote. */
+    fun reset() {
+        uris = emptyList()
+        index = 0
+        active = false
+        phase = Phase.Idle
+        log = ""
+    }
+
     /** O serviço chama quando o Google Fotos já está mostrando a foto. */
     fun onPhotoShown() {
         if (active && phase == Phase.AbrindoFoto) phase = Phase.ProcurandoApagar
