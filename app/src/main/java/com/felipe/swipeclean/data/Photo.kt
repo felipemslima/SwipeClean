@@ -12,7 +12,10 @@ data class Photo(
     val bucketId: String,       // id do álbum/pasta
     val bucketName: String,     // nome do álbum/pasta
     val volumeName: String,     // "external_primary" ou id do cartão SD
-)
+) {
+    /** Chave estável da foto entre sessões (o _ID só é único por volume). */
+    val key: String get() = "$volumeName:$id"
+}
 
 /** Um álbum = um bucket do MediaStore (uma pasta), agregando contagem e tamanho. */
 data class Album(

@@ -12,8 +12,8 @@
 
 ## Próximos
 
+- [x] Lembrar fotos já mantidas entre sessões (`KeepStore` em SharedPreferences); pula no swipe, mostra "N a revisar" por álbum e tem "Rever fotos mantidas" no menu
 - [ ] Agrupar também por **mês** (além de álbum) — usar `DATE_ADDED`
-- [ ] Lembrar fotos já revisadas entre sessões (persistir decisões "manter")
 - [ ] Animar os botões com o mesmo swipe do gesto
 - [ ] Ícone próprio do app (adaptive icon) no lugar do ícone padrão
 - [ ] Suporte a vídeos (MediaStore.Video) além de imagens

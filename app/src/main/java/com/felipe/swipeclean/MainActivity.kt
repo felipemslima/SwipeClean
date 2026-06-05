@@ -77,6 +77,7 @@ private fun App(vm: SwipeViewModel = viewModel()) {
             vm = vm,
             onOpenAlbum = { bucketId -> vm.startAlbum(bucketId); screen = Screen.Swipe },
             onOpenAll = { vm.startAll(); screen = Screen.Swipe },
+            onResetKept = { vm.clearKept(); vm.loadLibrary() },
         )
         Screen.Swipe -> SwipeScreen(
             vm = vm,

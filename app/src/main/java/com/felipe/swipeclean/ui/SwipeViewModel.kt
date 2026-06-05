@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.felipe.swipeclean.data.Album
+import com.felipe.swipeclean.data.KeepStore
 import com.felipe.swipeclean.data.MediaRepository
 import com.felipe.swipeclean.data.Photo
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,10 @@ enum class Decision { KEEP, DELETE }
 class SwipeViewModel(app: Application) : AndroidViewModel(app) {
 
     private val repo = MediaRepository(app)
+    private val keepStore = KeepStore(app)
+
+    /** Chaves das fotos já decididas como MANTER (persistido entre sessões). */
+    private val keptKeys: MutableSet<String> = keepStore.loadKept()
 
     var loading by mutableStateOf(false)
         private set
@@ -65,13 +70,24 @@ class SwipeViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun startAlbum(bucketId: String) {
-        sessionPhotos = allPhotos.filter { it.bucketId == bucketId }
+        // Pula as fotos já mantidas em sessões anteriores.
+        sessionPhotos = allPhotos.filter { it.bucketId == bucketId && it.key !in keptKeys }
         resetSession()
     }
 
     fun startAll() {
-        sessionPhotos = allPhotos
+        sessionPhotos = allPhotos.filter { it.key !in keptKeys }
         resetSession()
+    }
+
+    /** Quantas fotos do álbum ainda faltam revisar (descontando as já mantidas). */
+    fun pendingCount(bucketId: String): Int =
+        allPhotos.count { it.bucketId == bucketId && it.key !in keptKeys }
+
+    /** Esquece todas as decisões "manter" — faz tudo voltar a ser revisável. */
+    fun clearKept() {
+        keptKeys.clear()
+        keepStore.clear()
     }
 
     private fun resetSession() {
@@ -84,6 +100,10 @@ class SwipeViewModel(app: Application) : AndroidViewModel(app) {
         val photo = current ?: return
         decisions[photo.id] = decision
         history.addLast(photo.id)
+        if (decision == Decision.KEEP) {
+            keptKeys.add(photo.key)
+            keepStore.save(keptKeys)   // persiste já — sobrevive a fechar o app
+        }
         index++
     }
 
@@ -92,6 +112,11 @@ class SwipeViewModel(app: Application) : AndroidViewModel(app) {
         val lastId = history.removeLast()
         decisions.remove(lastId)
         index = (index - 1).coerceAtLeast(0)
+        // Se a decisão desfeita era MANTER, remove também da memória persistida.
+        val photo = sessionPhotos.getOrNull(index)
+        if (photo != null && photo.id == lastId) {
+            if (keptKeys.remove(photo.key)) keepStore.save(keptKeys)
+        }
     }
 
     /** Chamado após o sistema confirmar a exclusão em lote. */
