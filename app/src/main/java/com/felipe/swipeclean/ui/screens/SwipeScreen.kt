@@ -168,7 +168,7 @@ fun SwipeScreen(
                         translationX = offsetX.value
                         rotationZ = offsetX.value / 22f
                     }
-                    .clip(RoundedCornerShape(30.dp)).background(sc.card)
+                    .clip(RoundedCornerShape(30.dp)).background(Color.Black)
                     .pointerInput(vm.index) {
                         detectHorizontalDragGestures(
                             onHorizontalDrag = { change, drag ->
