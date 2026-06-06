@@ -20,15 +20,19 @@ por script — então dá pra fazer a triagem rápida aqui.
 
 ## Usar
 
-No visualizador de uma foto:
+Funciona na **grade** (timeline) do Google Fotos:
+
+1. Use as **setas** para mover o foco entre as fotos (navegação nativa).
+2. **S** → seleciona/desmarca a foto focada.
+3. Repita S nas fotos que quer apagar.
+4. **D** → apaga **todas as selecionadas de uma vez** (lote, com a confirmação do Google).
 
 | Tecla | Ação |
 |---|---|
-| **D** (ou `Delete`) | manda a foto para a **lixeira** (apaga da nuvem) e avança |
-| **→** (seta direita) | mantém / próxima foto (nativo do Google Fotos) |
-| **K** | próxima foto (alternativa à seta) |
+| **S** | selecionar / desmarcar a foto atual |
+| **D** | apagar todas as selecionadas (em lote) |
 
-Um HUD no canto mostra as teclas e quantas você já apagou.
+Um HUD no canto mostra as teclas e o status da última ação.
 
 > Apagar no Google Fotos web move para a **Lixeira** (fica ~60 dias lá). Para
 > liberar espaço na hora, esvazie a Lixeira depois.
