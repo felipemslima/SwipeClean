@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SwipeClean for Google Photos
 // @namespace    felipemslima.swipeclean
-// @version      0.1.0
+// @version      0.1.1
 // @description  Triagem rápida no Google Fotos (web): D apaga (lixeira), seta direita mantém. HUD com contador.
 // @author       Felipe + Claude
 // @match        https://photos.google.com/*
@@ -11,6 +11,16 @@
 
 (function () {
   'use strict';
+
+  console.log('[SwipeClean] userscript carregado em', location.href);
+
+  // Garante que o body existe antes de inserir o HUD (SPA pode demorar).
+  function whenReady(fn) {
+    if (document.body) return fn();
+    const t = setInterval(() => {
+      if (document.body) { clearInterval(t); fn(); }
+    }, 100);
+  }
 
   // Rótulos do botão "lixeira" e do botão de confirmação, em vários idiomas.
   // Se o seu Google Fotos estiver em outro idioma e não funcionar, adicione o
@@ -29,7 +39,7 @@
     'padding:10px 12px', 'border-radius:12px', 'box-shadow:0 4px 16px rgba(0,0,0,.4)',
     'pointer-events:none', 'max-width:230px',
   ].join(';');
-  document.body.appendChild(hud);
+  whenReady(() => document.body.appendChild(hud));
 
   function renderHud(msg) {
     const inPhoto = location.pathname.includes('/photo/');
