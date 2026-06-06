@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SwipeClean for Google Photos
 // @namespace    felipemslima.swipeclean
-// @version      0.1.1
+// @version      0.1.2
 // @description  Triagem rápida no Google Fotos (web): D apaga (lixeira), seta direita mantém. HUD com contador.
 // @author       Felipe + Claude
 // @match        https://photos.google.com/*
@@ -41,15 +41,27 @@
   ].join(';');
   whenReady(() => document.body.appendChild(hud));
 
+  // Sem innerHTML: o Google Fotos usa Trusted Types (CSP) e bloqueia innerHTML.
+  // Montamos o HUD com createElement/textContent.
+  function span(text, color, bold) {
+    const s = document.createElement('span');
+    s.textContent = text;
+    if (color) s.style.color = color;
+    if (bold) s.style.fontWeight = 'bold';
+    return s;
+  }
   function renderHud(msg) {
     const inPhoto = location.pathname.includes('/photo/');
-    hud.innerHTML =
-      '<b style="color:#FFB871">SwipeClean</b> · Google Fotos<br>' +
-      '<span style="color:#FF90A1">D</span> = apagar &nbsp; ' +
-      '<span style="color:#7CB1FF">→</span> = manter<br>' +
-      'apagadas: <b>' + deleted + '</b>' +
-      (inPhoto ? '' : '<br><span style="color:#A9A9C2">abra uma foto para começar</span>') +
-      (msg ? '<br><span style="color:#A9A9C2">' + msg + '</span>' : '');
+    hud.textContent = '';
+    const br = () => document.createElement('br');
+    hud.append(
+      span('SwipeClean', '#FFB871', true), span(' · Google Fotos'), br(),
+      span('D', '#FF90A1', true), span(' = apagar   '),
+      span('→', '#7CB1FF', true), span(' = manter'), br(),
+      span('apagadas: '), span(String(deleted), null, true),
+    );
+    if (!inPhoto) hud.append(br(), span('abra uma foto para começar', '#A9A9C2'));
+    if (msg) hud.append(br(), span(msg, '#A9A9C2'));
   }
   renderHud();
   setInterval(renderHud, 1000); // some/aparece conforme você entra/sai da foto
