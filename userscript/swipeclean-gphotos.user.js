@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SwipeClean for Google Photos
 // @namespace    felipemslima.swipeclean
-// @version      0.1.2
+// @version      0.1.3
 // @description  Triagem rápida no Google Fotos (web): D apaga (lixeira), seta direita mantém. HUD com contador.
 // @author       Felipe + Claude
 // @match        https://photos.google.com/*
@@ -25,8 +25,9 @@
   // Rótulos do botão "lixeira" e do botão de confirmação, em vários idiomas.
   // Se o seu Google Fotos estiver em outro idioma e não funcionar, adicione o
   // texto do botão aqui.
-  const TRASH_RE = /lixeira|trash|delete|excluir|apagar|papelera|corbeille|l[öo]schen|cestino|kosz/i;
-  const CONFIRM_RE = /mover para a lixeira|move to trash|move to bin|excluir|delete|apagar|remove|mover a la papelera/i;
+  // Verbos de AÇÃO do botão apagar (NÃO o item "Lixeira" do menu lateral).
+  const TRASH_RE = /mover para a lixeira|move to trash|move to bin|enviar para a reciclagem|excluir|apagar|delete|supprimer|l[öo]schen|eliminar/i;
+  const CONFIRM_RE = /mover para a lixeira|move to trash|move to bin|excluir|delete|apagar|remove|mover a la papelera|eliminar/i;
 
   let deleted = 0;
   let busy = false;
@@ -72,15 +73,18 @@
       el.getClientRects().length > 0 && !el.disabled;
   }
 
+  // Acha o BOTÃO de apagar (não o link "Lixeira" do menu lateral).
   function findByLabel(re) {
-    const nodes = document.querySelectorAll('[aria-label],[data-tooltip],[title]');
+    const nodes = document.querySelectorAll('[aria-label],[data-tooltip]');
     for (const el of nodes) {
-      const label = (el.getAttribute('aria-label') || el.getAttribute('data-tooltip') ||
-        el.getAttribute('title') || '');
-      if (re.test(label) && visible(el)) {
-        // prefere o elemento clicável (botão) — sobe se for um filho
-        return el.closest('[role="button"],button') || el;
-      }
+      const label = (el.getAttribute('aria-label') || el.getAttribute('data-tooltip') || '');
+      if (!re.test(label)) continue;
+      if (el.closest('nav,[role="navigation"]')) continue;   // ignora menu lateral
+      const btn = el.closest('[role="button"],button');
+      if (!btn) continue;                                     // só botão, não link
+      if (btn.closest('a[href]')) continue;                   // não é link de navegação
+      if (!visible(btn)) continue;
+      return btn;
     }
     return null;
   }
@@ -88,6 +92,7 @@
   function findConfirmButton(re) {
     const btns = document.querySelectorAll('[role="button"],button');
     for (const b of btns) {
+      if (b.closest('nav,[role="navigation"]')) continue;
       const txt = (b.innerText || b.textContent || '').trim();
       if (txt && re.test(txt) && visible(b)) return b;
     }
