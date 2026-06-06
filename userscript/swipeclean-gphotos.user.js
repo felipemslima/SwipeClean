@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         SwipeClean for Google Photos
 // @namespace    felipemslima.swipeclean
-// @version      0.2.0
+// @version      0.2.1
 // @description  Triagem no Google Fotos (web): S seleciona a foto atual, D apaga todas as selecionadas em lote.
 // @author       Felipe + Claude
 // @match        https://photos.google.com/*
@@ -32,12 +32,13 @@
   // ── HUD (sem innerHTML por causa do Trusted Types do Google Fotos) ──────
   const hud = document.createElement('div');
   hud.style.cssText = [
-    'position:fixed', 'top:14px', 'right:14px', 'z-index:99999',
-    'background:rgba(20,20,31,.92)', 'color:#ECECF6', 'font:13px/1.5 system-ui,sans-serif',
-    'padding:10px 12px', 'border-radius:12px', 'box-shadow:0 4px 16px rgba(0,0,0,.4)',
-    'pointer-events:none', 'max-width:240px',
+    'position:fixed', 'bottom:14px', 'left:14px', 'z-index:99999',
+    'background:rgba(20,20,31,.85)', 'color:#ECECF6', 'font:12px/1.5 system-ui,sans-serif',
+    'padding:8px 10px', 'border-radius:12px', 'box-shadow:0 4px 16px rgba(0,0,0,.4)',
+    'pointer-events:none', 'max-width:230px', 'opacity:.92',
   ].join(';');
   whenReady(() => document.body.appendChild(hud));
+  let hudHidden = false;
 
   function span(text, color, bold) {
     const s = document.createElement('span');
@@ -51,9 +52,9 @@
     const br = () => document.createElement('br');
     hud.append(
       span('SwipeClean', '#FFB871', true), span(' · Google Fotos'), br(),
-      span('S', '#7CB1FF', true), span(' = selecionar   '),
-      span('D', '#FF90A1', true), span(' = apagar selecionadas'), br(),
-      span('na grade: foque a foto (setas) e tecle S', '#A9A9C2'),
+      span('S', '#7CB1FF', true), span(' selecionar · '),
+      span('D', '#FF90A1', true), span(' apagar · '),
+      span('H', '#A9A9C2', true), span(' esconder'),
     );
     if (lastMsg) hud.append(br(), span(lastMsg, '#ECECF6', true));
   }
@@ -132,5 +133,6 @@
     const k = e.key.toLowerCase();
     if (k === 's') { e.preventDefault(); selectCurrent(); }
     else if (k === 'd') { e.preventDefault(); deleteSelected(); }
+    else if (k === 'h') { e.preventDefault(); hudHidden = !hudHidden; hud.style.display = hudHidden ? 'none' : ''; }
   }, true);
 })();

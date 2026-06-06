@@ -31,8 +31,10 @@ Funciona na **grade** (timeline) do Google Fotos:
 |---|---|
 | **S** | selecionar / desmarcar a foto atual |
 | **D** | apagar todas as selecionadas (em lote) |
+| **H** | esconder / mostrar o HUD |
 
-Um HUD no canto mostra as teclas e o status da última ação.
+Um HUD discreto no canto inferior esquerdo mostra as teclas e o status da última
+ação. Atrapalhou? Tecle **H** para esconder.
 
 > Apagar no Google Fotos web move para a **Lixeira** (fica ~60 dias lá). Para
 > liberar espaço na hora, esvazie a Lixeira depois.
