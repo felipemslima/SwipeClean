@@ -170,7 +170,7 @@ fun ReviewScreen(
             )
             Spacer(Modifier.height(10.dp))
             com.felipe.swipeclean.ui.components.ScGhostButton(
-                text = "Apagar do Google Fotos (beta)",
+                text = "Apagar do Google Fotos (manual)",
                 onClick = onGooglePhotos,
                 modifier = Modifier.fillMaxWidth(),
             )

@@ -1,64 +1,46 @@
-# Automação de exclusão no Google Fotos (experimental)
+# Apagar do Google Fotos — assistido manual
 
-> **Branch `gphotos-automation`.** Este recurso usa um **AccessibilityService**
-> para dirigir o app do Google Fotos. **Não é publicável na Play Store** (política
-> de acessibilidade) — por isso fica separado da `master`, que continua a versão
-> distribuível. Uso pessoal.
+> **Branch `gphotos-automation`.** Integração do SwipeClean com o Google Fotos
+> para remover também da nuvem. Mantida separada da `master` (que é só local).
 
-## Por que assim
+## Por que assistido manual (e não automático)
 
-A API oficial do Google Fotos **não permite apagar** fotos. O único jeito de
-"swipe → apaga na nuvem de verdade" automático é simular os toques no app do
-Google Fotos. É frágil: depende dos textos/telas do Google Fotos.
+- A **API oficial do Google Fotos não permite apagar** fotos.
+- **Auto-selecionar** suas fotos na grade do Google Fotos **não é confiável**:
+  a grade não expõe a identidade dos arquivos, então um app não consegue marcar
+  exatamente as fotos que você escolheu.
+- A tentativa anterior (AccessibilityService clicando foto a foto) era **lenta e
+  falhava** ("falha ao remover para a lixeira"). Foi removida.
 
-## Como funciona
+A triagem — a parte chata de decidir o que apagar — já é feita no swipe. A
+exclusão na nuvem fica como um passo manual rápido e **sem falhas**.
 
-1. Você revisa as fotos no SwipeClean (swipe normal) e vai para **Revisão**.
-2. Toca em **"Apagar do Google Fotos (beta)"**.
-3. Liga o **serviço de acessibilidade** do SwipeClean (a tela tem o botão que
-   abre Configurações ▸ Acessibilidade).
-4. Toca **"Apagar do Google Fotos"**. O app então, para cada foto marcada:
-   - abre a foto no Google Fotos (`ACTION_VIEW`);
-   - o serviço acha o botão **apagar/lixeira** (direto ou via "mais opções") e clica;
-   - acha o botão de **confirmação** no diálogo e clica;
-   - abre a próxima foto.
-5. No fim, volta ao SwipeClean ("Concluído").
+## Como funciona (tela "Apagar do Google Fotos")
 
-Como o Google Fotos apaga uma foto com backup **do aparelho e da nuvem**, isso
-resolve o problema de a foto continuar no Google Fotos.
+Acessível pelo botão **"Apagar do Google Fotos (manual)"** na tela de Revisão.
+
+1. Mostra as fotos marcadas no lote.
+2. **"Abrir Google Fotos"** → abre o app; você segura uma foto para entrar no
+   modo seleção, marca as do lote e toca na **lixeira** (apaga do aparelho e da
+   nuvem de uma vez, com um confirm só).
+3. Alternativa: tocar numa **miniatura** abre aquela foto direto no Google Fotos
+   para você mandar pra lixeira individualmente.
 
 ## Arquivos
 
 ```
-gphotos/
-├── GPhotosQueue.kt          # estado compartilhado UI ↔ serviço (fila, fase, log)
-├── GPhotosHelpers.kt        # intent de abrir no GPhotos, checagens, abrir settings
-└── GPhotosDeleteService.kt  # AccessibilityService que clica apagar/confirmar
-ui/screens/GPhotosScreen.kt  # tela: status do serviço, iniciar, progresso
-res/xml/gphotos_accessibility_config.xml
-AndroidManifest.xml          # <service> de acessibilidade + <queries> do GPhotos
+gphotos/GPhotosHelpers.kt    # intents: abrir foto / abrir app, checar instalado
+ui/screens/GPhotosScreen.kt  # tela assistida (grade + abrir Google Fotos)
+AndroidManifest.xml          # <queries> do Google Fotos (visibilidade do pacote)
 ```
 
-## Limitações / avisos
+> A automação por acessibilidade foi removida (sem `<service>`, sem
+> `AccessibilityService`). Histórico no git desta branch, se quiser revisitar.
 
-- **Idioma:** as palavras procuradas estão em **PT-BR e EN**
-  (`DELETE_WORDS`, `MORE_WORDS`, `CONFIRM_WORDS` em `GPhotosDeleteService.kt`).
-  Se o Google Fotos estiver em outro idioma, **adicione as palavras** lá.
-- **Mudanças do Google Fotos:** se a tela mudar, o serviço pode não achar o
-  botão; ele tenta algumas vezes e **pula** a foto.
-- **Não desligue a tela** durante o processo.
-- **Velocidade:** há esperas (`STEP_MS`) para a tela assentar; é proposital.
-- Não publicar na Play Store com este serviço ativo.
+## Versão distribuível
 
-## Como ajustar (debug)
-
-Veja os passos no `logcat` filtrando pela tag **`GPhotosDelete`**. Se um botão
-não for encontrado, anote o texto/descrição real do botão no Google Fotos e
-acrescente às listas de palavras em `GPhotosDeleteService.kt`.
-
-## Voltar para a versão limpa
+A `master` não tem nada de Google Fotos — é a versão limpa/Play-safe:
 
 ```
 git checkout master
 ```
-A `master` não tem nada de acessibilidade — é a versão distribuível.
