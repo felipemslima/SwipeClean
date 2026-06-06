@@ -1,0 +1,122 @@
+// ==UserScript==
+// @name         SwipeClean for Google Photos
+// @namespace    felipemslima.swipeclean
+// @version      0.1.0
+// @description  Triagem rápida no Google Fotos (web): D apaga (lixeira), seta direita mantém. HUD com contador.
+// @author       Felipe + Claude
+// @match        https://photos.google.com/*
+// @run-at       document-idle
+// @grant        none
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  // Rótulos do botão "lixeira" e do botão de confirmação, em vários idiomas.
+  // Se o seu Google Fotos estiver em outro idioma e não funcionar, adicione o
+  // texto do botão aqui.
+  const TRASH_RE = /lixeira|trash|delete|excluir|apagar|papelera|corbeille|l[öo]schen|cestino|kosz/i;
+  const CONFIRM_RE = /mover para a lixeira|move to trash|move to bin|excluir|delete|apagar|remove|mover a la papelera/i;
+
+  let deleted = 0;
+  let busy = false;
+
+  // ── HUD ────────────────────────────────────────────────────────────────
+  const hud = document.createElement('div');
+  hud.style.cssText = [
+    'position:fixed', 'top:14px', 'right:14px', 'z-index:99999',
+    'background:rgba(20,20,31,.92)', 'color:#ECECF6', 'font:13px/1.4 system-ui,sans-serif',
+    'padding:10px 12px', 'border-radius:12px', 'box-shadow:0 4px 16px rgba(0,0,0,.4)',
+    'pointer-events:none', 'max-width:230px',
+  ].join(';');
+  document.body.appendChild(hud);
+
+  function renderHud(msg) {
+    const inPhoto = location.pathname.includes('/photo/');
+    hud.innerHTML =
+      '<b style="color:#FFB871">SwipeClean</b> · Google Fotos<br>' +
+      '<span style="color:#FF90A1">D</span> = apagar &nbsp; ' +
+      '<span style="color:#7CB1FF">→</span> = manter<br>' +
+      'apagadas: <b>' + deleted + '</b>' +
+      (inPhoto ? '' : '<br><span style="color:#A9A9C2">abra uma foto para começar</span>') +
+      (msg ? '<br><span style="color:#A9A9C2">' + msg + '</span>' : '');
+  }
+  renderHud();
+  setInterval(renderHud, 1000); // some/aparece conforme você entra/sai da foto
+
+  // ── helpers de DOM ──────────────────────────────────────────────────────
+  function visible(el) {
+    return el && el.offsetParent !== null &&
+      el.getClientRects().length > 0 && !el.disabled;
+  }
+
+  function findByLabel(re) {
+    const nodes = document.querySelectorAll('[aria-label],[data-tooltip],[title]');
+    for (const el of nodes) {
+      const label = (el.getAttribute('aria-label') || el.getAttribute('data-tooltip') ||
+        el.getAttribute('title') || '');
+      if (re.test(label) && visible(el)) {
+        // prefere o elemento clicável (botão) — sobe se for um filho
+        return el.closest('[role="button"],button') || el;
+      }
+    }
+    return null;
+  }
+
+  function findConfirmButton(re) {
+    const btns = document.querySelectorAll('[role="button"],button');
+    for (const b of btns) {
+      const txt = (b.innerText || b.textContent || '').trim();
+      if (txt && re.test(txt) && visible(b)) return b;
+    }
+    return null;
+  }
+
+  // ── ações ────────────────────────────────────────────────────────────────
+  function trashCurrent() {
+    if (busy) return;
+    if (!location.pathname.includes('/photo/')) { renderHud('abra uma foto'); return; }
+    const btn = findByLabel(TRASH_RE);
+    if (!btn) { renderHud('não achei a lixeira nesta tela'); return; }
+    busy = true;
+    btn.click();
+
+    // Alguns idiomas/versões mostram um diálogo de confirmação; clica nele.
+    let tries = 0;
+    const t = setInterval(() => {
+      tries++;
+      const ok = findConfirmButton(CONFIRM_RE);
+      if (ok) { ok.click(); clearInterval(t); finishDelete(); }
+      else if (tries >= 6) { clearInterval(t); finishDelete(); } // sem diálogo (só toast)
+    }, 200);
+  }
+
+  function finishDelete() {
+    deleted++;
+    renderHud('apagada ✓');
+    // O Google Fotos costuma avançar sozinho; se não, vai para a próxima.
+    setTimeout(() => { busy = false; }, 400);
+  }
+
+  function next() {
+    // ArrowRight nativo do visualizador navega para a próxima foto.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  }
+
+  // ── teclado ───────────────────────────────────────────────────────────────
+  window.addEventListener('keydown', (e) => {
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return;
+
+    const k = e.key.toLowerCase();
+    if (k === 'd' || e.key === 'Delete') {
+      e.preventDefault();
+      e.stopPropagation();
+      trashCurrent();
+    } else if (k === 'k') {
+      e.preventDefault();
+      next();
+    }
+    // a seta direita (→) já é nativa do Google Fotos para "próxima"
+  }, true);
+})();
