@@ -1,63 +1,55 @@
 # SwipeClean
 
-App Android para limpar fotos por **swipe** (deslizar) — esquerda apaga, direita
-mantém — com botões equivalentes. Você decide foto a foto e, no fim, confirma a
-exclusão em lote.
+**Clean up your phone's photos one swipe at a time.** Swipe left to delete, right to keep, then confirm everything in one batch.
 
-## Por que esse e não o DeleteSwipe
+<!-- TODO: add 2–3 screenshots (albums, swipe, review) or a short GIF -->
 
-- **Sem anúncios, sem paywall.** Tudo grátis.
-- **Lê o cartão SD.** Itera todos os volumes do MediaStore
-  (`getExternalVolumeNames`), não só o armazenamento interno — por isso enxerga
-  fotos que o app comum ignora.
-- **Undo de verdade.** Nada é apagado até você confirmar; qualquer decisão pode
-  ser desfeita antes disso.
-- **Organização por álbum** com contagem e tamanho, e quanto espaço você libera.
+Native Android app in **Kotlin + Jetpack Compose**. Free, no ads, no paywall.
 
-## Como funciona (fluxo)
+## Why I built it
 
-1. **Álbuns** — lista por pasta (bucket), com capa, nº de fotos e tamanho.
-2. **Swipe** — desliza/usa botões: ⬅️ apagar · ➡️ manter · ↩️ desfazer.
-3. **Revisar** — vê as marcadas para apagar e o espaço a liberar.
-4. **Apagar** — o sistema pede a confirmação final (vale também para o SD).
+Popular swipe-to-delete apps hide features behind paywalls, and most of them **cannot see photos on the SD card**. SwipeClean was built to fix both:
 
-Nada é deletado antes do passo 4.
+- **Reads every storage volume.** It iterates all MediaStore volumes (`getExternalVolumeNames`), not only internal storage, so photos on the SD card show up too.
+- **Real undo.** Nothing is deleted until you confirm, and any decision can be reversed before that.
+- **Remembers what you kept.** Photos you already kept are skipped next time, and each album shows how many are still left to review.
+- **Album view** with cover, photo count, size and how much space you will free.
 
-## Stack
+## How it works
 
-- Kotlin + Jetpack Compose (Material 3)
-- MediaStore (leitura multi-volume + `createDeleteRequest`)
-- Coil (carregamento de imagens)
-- Arquitetura MVVM (`SwipeViewModel`)
-- `minSdk 30` (Android 11) · `targetSdk 34`
+1. **Albums** — photos grouped by folder, with count and total size
+2. **Swipe** — ⬅️ delete · ➡️ keep · ↩️ undo (gestures or buttons)
+3. **Review** — see everything marked for deletion and the space to be freed
+4. **Delete** — a single system confirmation (`MediaStore.createDeleteRequest`), which also works on the SD card
 
-## Estrutura
+## Tech
+
+| | |
+|---|---|
+| UI | Jetpack Compose, Material 3, custom dark theme |
+| Architecture | MVVM (`SwipeViewModel` holds library, session, decisions and the undo stack) |
+| Data | MediaStore multi-volume queries, `SharedPreferences` for kept photos |
+| Images | Coil |
+| Target | `minSdk 30` (Android 11, required for `createDeleteRequest` and per-volume access), `targetSdk 34` |
 
 ```
-app/src/main/
-├── AndroidManifest.xml
-├── java/com/felipe/swipeclean/
-│   ├── MainActivity.kt              # entrada + navegação simples + permissões
-│   ├── data/
-│   │   ├── Photo.kt                 # modelos Photo e Album
-│   │   └── MediaRepository.kt       # lê MediaStore (todos os volumes, incl. SD)
-│   ├── ui/
-│   │   ├── SwipeViewModel.kt        # estado: biblioteca, sessão, decisões, undo
-│   │   ├── theme/Theme.kt
-│   │   └── screens/
-│   │       ├── PermissionScreen.kt
-│   │       ├── AlbumsScreen.kt
-│   │       ├── SwipeScreen.kt       # gesto de swipe + botões
-│   │       └── ReviewScreen.kt      # exclusão em lote
-│   └── util/Format.kt               # formata bytes
-└── res/values/                      # strings, theme
+app/src/main/java/com/felipe/swipeclean/
+├── MainActivity.kt          # entry point, navigation, permissions
+├── data/
+│   ├── MediaRepository.kt   # MediaStore queries across all volumes
+│   ├── KeepStore.kt         # persists kept photos between sessions
+│   └── Photo.kt             # Photo / Album models
+├── ui/
+│   ├── SwipeViewModel.kt
+│   ├── screens/             # Welcome, Albums, Swipe, Review, Done
+│   └── theme/
+└── util/Format.kt
 ```
 
-## Rodar
+## Running
 
-Você não precisa entender Android para rodar. Siga **[SETUP.md](SETUP.md)** —
-passo a passo do zero (instalar Android Studio → abrir → rodar no celular).
+Open the project in Android Studio and run it on a device (a physical phone is needed to test the SD card). For a step-by-step guide from zero, see [SETUP.md](SETUP.md) (in Portuguese).
 
-## Status
+## Roadmap
 
-MVP. Próximos passos em `docs/ROADMAP.md`.
+MVP is done. Next up: group by month, video support, session statistics and duplicate detection. See [docs/ROADMAP.md](docs/ROADMAP.md).
